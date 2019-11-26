@@ -2,8 +2,16 @@ import sqlite3
 import json
 import os
 import inflect
+import geopy.distance
 import requests
 
+
+url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location=Ann-Arbor&thumbMaps=false"
+r = requests.get(url)
+data = json.loads(r.text)
+lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
+lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
+coords_1 = (lat,lng)
 #only have in one file
 def setUpDatabase(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +36,11 @@ def set_up_ing_table(cur, conn):
 
 def set_up_country_table(cur, conn):
     cur.execute("DROP TABLE IF EXISTS Countries")
+    cur.execute("DROP TABLE IF EXISTS Distances")
+    cur.execute("DROP TABLE IF EXISTS Lat_lng")
     cur.execute("CREATE TABLE Countries (country_id INTEGER, country TEXT)")
+    cur.execute("CREATE TABLE Lat_lng (country_id INTEGER, latitude REAL, longitude REAL)")
+    cur.execute("CREATE TABLE Distances (country_id INTEGER, distance REAL)")
 
     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
     values = (0, "France")
@@ -74,29 +86,61 @@ def format_countries(countries, cur, conn):
         c = cur.fetchone()
         if c:
             c_ids.append(c[0])
-     
+        else:
+            url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location={}&thumbMaps=false"
+            request_url = url.format(s)
+            r = requests.get(request_url)
+            data = json.loads(r.text)
+            lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
+            lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
+
+            coords_2 = (lat, lng)
+            distance = geopy.distance.distance(coords_1, coords_2).km
+
+            cur.execute("SELECT * FROM Countries ORDER BY country_id DESC LIMIT 1")
+            bookmark = cur.fetchone()
+            if bookmark:
+                bookmark = bookmark[0]+1
+            else:
+                bookmark = 0
+
+            query ="INSERT INTO Countries(country_id, country ) VALUES (?, ?)"
+            values = (bookmark, s)
+            cur.execute(query,values)
+            
+            query ="INSERT INTO Lat_lng(country_id, latitude, longitude) VALUES (?, ?, ?)"
+            values = (bookmark, lat, lng)
+            cur.execute(query,values)
+
+            query ="INSERT INTO Distances(country_id, distance) VALUES (?, ?)"
+            values = (bookmark, distance)
+            cur.execute(query,values)
+
+            c_ids.append(bookmark)
+            
     return c_ids
 
 
 
 def insert_into_tables(cur, conn, index, product_name, nutriscore, countries, ing_id):
+    #get last row
     cur.execute("SELECT * FROM Brands_and_scores ORDER BY brand_id DESC LIMIT 1")
     bookmark = cur.fetchone()
     if bookmark:
-        bookmark = bookmark[0]
+        bookmark = bookmark[0]+1
     else:
         bookmark = 0
     
     #Brands and scores insert
     query = "INSERT INTO Brands_and_scores (brand_id, brand, ing_id, nut_score) VALUES (?, ?, ?, ?)"
-    b_id = bookmark+1
-    values = (b_id, product_name, ing_id, nutriscore)
+  
+    values = (bookmark, product_name, ing_id, nutriscore)
     cur.execute(query, values)
 
     #countries sold insert
     for c_id in countries:
         query = "INSERT INTO Brand_countries_sold (brand_id, country_id) VALUES (?,?)"
-        values = (b_id, c_id)
+        values = (bookmark, c_id)
         cur.execute(query, values)
     conn.commit()
 
@@ -106,7 +150,7 @@ def parse_json(data, cur, conn, ing_id):
     count = 0
     index = 0
     
-    while count < 10 and index < len(data):
+    while count < 10 and index < len(data['products']):
         d = data['products'][index]
 
         #nutriscore grade
@@ -147,14 +191,24 @@ def parse_json(data, cur, conn, ing_id):
 
 def request_url(cur, conn):
     #DROPS DELETE/COMMENT OUT WHEN NOT NEEDED
-    # cur.execute("DROP TABLE IF EXISTS Brands_and_scores")
-    # cur.execute("DROP TABLE IF EXISTS Brand_countries_sold")
+    #cur.execute("DROP TABLE IF EXISTS Brands_and_scores")
+    #cur.execute("DROP TABLE IF EXISTS Brand_countries_sold")
 
     cur.execute("CREATE TABLE IF NOT EXISTS Brands_and_scores (brand_id, brand, ing_id, nut_score)")
     cur.execute("CREATE TABLE IF NOT EXISTS Brand_countries_sold (brand_id, country_id)")
-
+    
     bookmark = open("off_bookmark.txt", 'r')
     pos = int(bookmark.read())
+    #get last row
+    cur.execute("SELECT * FROM Ingredients ORDER BY ing_id DESC LIMIT 1")
+    check = cur.fetchone()[0]
+
+    if(pos > check):
+        print("No more ingredients to check")
+        bookmark.close()
+        return
+
+
 
     cur.execute("SELECT ingredient FROM Ingredients WHERE ing_id = ?", (pos,))
     ing = cur.fetchone()[0]
@@ -184,7 +238,7 @@ def main():
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
     # set_up_ing_table(cur,conn)
-    set_up_country_table(cur, conn)
+   # set_up_country_table(cur, conn)
     request_url(cur, conn)
 
 if __name__ == "__main__":
