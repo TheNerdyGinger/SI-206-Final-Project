@@ -104,15 +104,15 @@ def format_countries(countries, cur, conn):
             else:
                 bookmark = 0
 
-            query ="INSERT INTO Countries(country_id, country ) VALUES (?, ?)"
+            query ="INSERT IGNORE INTO Countries(country_id, country ) VALUES (?, ?)"
             values = (bookmark, s)
             cur.execute(query,values)
             
-            query ="INSERT INTO Lat_lng(country_id, latitude, longitude) VALUES (?, ?, ?)"
+            query ="INSERT IGNORE INTO Lat_lng(country_id, latitude, longitude) VALUES (?, ?, ?)"
             values = (bookmark, lat, lng)
             cur.execute(query,values)
 
-            query ="INSERT INTO Distances(country_id, distance) VALUES (?, ?)"
+            query ="INSERT IGNORE INTO Distances(country_id, distance) VALUES (?, ?)"
             values = (bookmark, distance)
             cur.execute(query,values)
 
@@ -238,7 +238,7 @@ def main():
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
     # set_up_ing_table(cur,conn)
-   # set_up_country_table(cur, conn)
+    # set_up_country_table(cur, conn)
     request_url(cur, conn)
 
 if __name__ == "__main__":

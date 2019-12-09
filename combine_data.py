@@ -102,9 +102,8 @@ def combine(cur, conn):
         min_distance = get_shortest_distance(brands_and_scores[index], cur, distances)
         brands_and_scores[index] =  (brands_and_scores[index][0],  brands_and_scores[index][1], min_distance)
         index+=1
-    # sorted(student_tuples, key=itemgetter(1,2))
     subtractor = 1 / index #what to subtract from each score based on it's distance
-    # shortened_list = sorted(brands_and_scores[0:index], key = lambda x: x[2])
+
     brands_and_scores[0:index] = sorted(brands_and_scores[0:index], key = itemgetter(2) )
     count = 0
     for b in brands_and_scores[0:index]:
