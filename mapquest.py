@@ -13,7 +13,7 @@ def get_countries(filename):
     f.close()
     
     for n in data.split(','):
-        m = n.replace('\cb3', '').replace('\cb1', '')
+        m = n.replace('\cb3 ', '').replace('\cb1 ', '')
         country_list.append(''.join(m.split('\\')))
         
     for n in country_list:
