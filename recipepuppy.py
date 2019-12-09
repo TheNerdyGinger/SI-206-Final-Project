@@ -29,22 +29,38 @@ def create_database(ingredients, recipe):
     recipelist = []
     conn = sqlite3.connect("Recipes.sqlite")
     cur = conn.cursor()
-    cur.execute('DROP TABLE IF EXISTS Recipes')
-    cur.execute('CREATE TABLE Recipes(recipe_id INTEGER, recipename TEXT)')
-    for i in recipenames:
-        if i not in recipelist:
-            recipelist.append(i)
-    
-        
-    cur.execute('DROP TABLE IF EXISTS Ingredients')
-    cur.execute('CREATE TABLE Ingredients(ingredient_id INTEGER, ingredient TEXT)')
-    for i in ingredients:
-        ingredient_single = i.split()
-        if ingredient_single not in ingredientlist:
-            ingredientlist.append(ingredient_single)
-    print(ingredientlist)
+    cur.execute('CREATE TABLE IF NOT EXISTS Recipes(recipe_id INTEGER, recipename TEXT)')
 
+    cur.execute('SELECT * FROM Recipes WHERE recipe_id = (SELECT MAX(recipe_id) FROM Recipes)')
+    start = cur.fetchone()
+    if start:
+        start = start[0] + 1
+    else:
+        start = 0
+    for i in recipenames:
+        istrip = i.strip('\n ')
+        if istrip not in recipelist:
+            recipelist.append(i)
+            cur.execute('INSERT INTO Recipes(recipe_id,recipename)VALUES(?,?)', (start, istrip))
+            start += 1
     
+    cur.execute('SELECT * FROM Ingredients WHERE ingredient_id = (SELECT MAX(ingredient_id) FROM Ingredients)')
+    start2 = cur.fetchone()
+    if start2:
+        start2 = start2[0] + 1
+    else:
+        start2 = 0
+    cur.execute('CREATE TABLE IF NOT EXISTS Ingredients(ingredient_id INTEGER, ingredient TEXT)')
+    
+    single_ing = []
+    for i in ingredients:
+        ingredient_single = i.split(',')
+        for y in ingredient_single:
+            if y not in single_ing:
+                single_ing.append(y)
+    
+    print(single_ing)
+
     conn.commit()
 
-print(create_database('eggs', 'omelet'))
+print(create_database('eggs','omelet'))
