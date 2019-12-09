@@ -25,17 +25,26 @@ def create_database(ingredients, recipe):
     data = dictionary(ingredients, recipe)
     recipenames = data.keys()
     ingredients = data.values()
+    ingredientlist = []
+    recipelist = []
     conn = sqlite3.connect("Recipes.sqlite")
     cur = conn.cursor()
     cur.execute('DROP TABLE IF EXISTS Recipes')
     cur.execute('CREATE TABLE Recipes(recipe_id INTEGER, recipename TEXT)')
-    cur.execute('INSERT INTO Recipes(recipeid)VALUES(0)')
     for i in recipenames:
-        cur.execute('INSERT INTO Recipes(recipename)VALUES(?)', (i))
+        if i not in recipelist:
+            recipelist.append(i)
     
+        
     cur.execute('DROP TABLE IF EXISTS Ingredients')
     cur.execute('CREATE TABLE Ingredients(ingredient_id INTEGER, ingredient TEXT)')
+    for i in ingredients:
+        ingredient_single = i.split()
+        if ingredient_single not in ingredientlist:
+            ingredientlist.append(ingredient_single)
+    print(ingredientlist)
 
-        
+    
+    conn.commit()
 
 print(create_database('eggs', 'omelet'))
