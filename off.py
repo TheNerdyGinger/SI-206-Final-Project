@@ -69,6 +69,7 @@ def setUpDatabase(db_name):
 def format_ingredient_name(ing):
     engine = inflect.engine()
     ing = ing.lower()
+    ing = ing.replace(" ", "-")
     ing = engine.plural(ing)
     ing = ing.replace(" ", "-")
     return ing
@@ -148,7 +149,7 @@ def insert_if_not_found(cur, conn, ing_id):
     name = cur.fetchone()[0]
 
     #get last row
-    cur.execute("SELECT brand_id FROM Brands_and_scores WHERE brand_id = ?", (ing_id,))
+    cur.execute("SELECT brand_id FROM Brands_and_scores WHERE ingredient_id = ?", (ing_id,))
     repeat= cur.fetchone()
     
     if not repeat:
@@ -181,12 +182,22 @@ def parse_json(data, cur, conn, ingredient_id):
         nutriscore = d.get("nutriscore_grade", -1)
         #if not found, use novagroup
         if nutriscore == -1:
-            nutriscore = d.get('nova_group', -1)
+            nova_group= d.get('nova_group', -1)
 
             #if nova group not found either, skip this brand
-            if (nutriscore == -1):
+            if (nova_group == -1):
                 index += 1
                 continue
+
+            #novagroup gets 'better' as it decreases. Opposite of nutriscore
+            if(nova_group== 4):
+                nutriscore = 1
+            elif(nova_group == 3):
+                nutriscore = 2
+            elif(nova_group== 2)
+                nutriscore = 4
+            elif(nova_group == 1):
+                nutriscore = 5
         
         #convert abcde nutriscore to an integer
         if type(nutriscore) == str:
@@ -241,12 +252,14 @@ def request_url(cur, conn):
         request_url = url.format(ing)
         r = requests.get(request_url)
         data = json.loads(r.text)
-        parse_json(data, cur, conn, pos) 
+        
     except:
         print("Error reading from url")
+        data = []
+    if data['count'] == 0:
         insert_if_not_found(cur, conn, pos)
-        return
-    
+    else:
+        parse_json(data, cur, conn, pos) 
     bookmark.close()
     pos +=1
     bookmark = open("off_bookmark.txt", 'w')
