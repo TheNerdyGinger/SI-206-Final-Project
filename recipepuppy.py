@@ -62,7 +62,7 @@ def create_database(filename):
     if start < len(data):
         recipename = data[start][0]
     else:
-        print('NO NEW RECIPES')
+        return 'NO NEW RECIPES'
         
         
 
