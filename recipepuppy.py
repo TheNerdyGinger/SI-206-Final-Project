@@ -82,10 +82,11 @@ def create_database(filename):
         if not repeats:
             cur.execute('INSERT INTO Ingredients (ingredient_id, ingredient) VALUES(?,?)', (start2, i))
             cur.execute('INSERT INTO Recipes_and_Ingredients (recipe_id, ingredient_id) VALUES(?,?)', (start, start2))
+            start2 += 1
         else:
             cur.execute('INSERT INTO Recipes_and_Ingredients (recipe_id, ingredient_id) VALUES(?,?)', (start, repeats[0][0]))
         
-        start2 += 1
+        
     
 
     conn.commit()
