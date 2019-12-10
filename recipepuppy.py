@@ -74,12 +74,19 @@ def create_database(filename):
         start2 = 0
 
     ingredients = data[start][1]
-    ing = [i for i in ingredients.split(',')]
+    ing = [i for i in ingredients.split(', ')]
+    cur.execute('CREATE TABLE IF NOT EXISTS Recipes_and_Ingredients (recipe_id INTEGER, ingredient_id INTEGER)')
     for i in ing:
-        cur.execute('INSERT INTO Ingredients (ingredient_id, ingredient) VALUES(?,?)', (start2, i))
+        cur.execute('SELECT ingredient_id FROM Ingredients WHERE ingredient = ?', (i, ))
+        repeats = cur.fetchall()
+        if not repeats:
+            cur.execute('INSERT INTO Ingredients (ingredient_id, ingredient) VALUES(?,?)', (start2, i))
+            cur.execute('INSERT INTO Recipes_and_Ingredients (recipe_id, ingredient_id) VALUES(?,?)', (start, start2))
+        else:
+            cur.execute('INSERT INTO Recipes_and_Ingredients (recipe_id, ingredient_id) VALUES(?,?)', (start, repeats[0][0]))
+        
         start2 += 1
     
-        
 
     conn.commit()
 
