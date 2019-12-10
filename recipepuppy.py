@@ -12,10 +12,18 @@ def get_data(ingredients, recipe):
     data2 = json.loads(data)
     return data2
 
+
+
+
+
 def read_file(filename):
     with open(filename) as f:
         lines = f.readlines()
     return lines
+
+
+
+
 
 def create_tuples(filename):
     recipelist = []
@@ -30,6 +38,7 @@ def create_tuples(filename):
         ingredient_names = results[0]['ingredients']
         if (recipe_name, ingredient_names) not in recipelist:
             recipelist.append((recipe_name, ingredient_names))
+
     return recipelist
 
 
@@ -38,14 +47,8 @@ def create_database(filename):
     conn = sqlite3.connect("Recipes.sqlite")
     cur = conn.cursor()
     data = create_tuples(filename)
-    
+
     cur.execute('CREATE TABLE IF NOT EXISTS Recipes(recipe_id INTEGER, recipenames TEXT)')
-    # cur.execute('SELECT * FROM Recipes WHERE recipe_id = (SELECT MAX(recipe_id) FROM Recipes)')
-    # start = cur.fetchone()
-    # if start:
-    #    start = start[0] + 1
-    # else:
-    #     start = 0
 
     # ADD NEXT ENTRY TO DATABASE-------------------------------------------------------------------
 
@@ -57,24 +60,28 @@ def create_database(filename):
         start = 0
     recipename = data[start][0]
     cur.execute('INSERT INTO Recipes (recipe_id, recipenames) VALUES (?,?)', (start, recipename))
-
+    start += 1
     
     #INGREDIENTS---------------------------------------------------------------------------------
 
+
     cur.execute('CREATE TABLE IF NOT EXISTS Ingredients (ingredient_id INTEGER, ingredient TEXT)')
-    cur.execute('SELECT * FROM Ingredients WHERE ingredient_id = (SELECT MAX(ingredient_id) FROM Ingredients)')
+    cur.execute('SELECT * FROM Ingredients WHERE ingredient_id = (SELECT MIN(ingredient_id) FROM Ingredients)')
     start2 = cur.fetchone()
     if start2:
         start2 = start2[0] + 1
     else:
         start2 = 0
-    ingredients = data[start2][1]
-    for i in ingredients.split(','):
-        cur.execute('INSERT INTO Ingredients (ingredient_id, ingredient) VALUES (?,?)', (start2, i))
 
-    
+    ingredients = data[start2][1]
+    ing = [i for i in ingredients.split(',')]
+    count = 0
+    for i in ing:
+        cur.execute('INSERT INTO Ingredients (ingredient_id, ingredient) VALUES(?,?)', (count, i))
+        count += 1
+    start2 + 1
+        
 
     conn.commit()
 
 print(create_database('recipes.txt'))
-
