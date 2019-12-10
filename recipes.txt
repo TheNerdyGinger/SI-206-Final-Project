@@ -2,3 +2,4 @@
 'beef','hamburger'
 'gravy','turkey'
 'lettuce','salad'
+'cheese','taco'
