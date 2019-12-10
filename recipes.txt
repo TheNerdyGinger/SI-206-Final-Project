@@ -3,3 +3,6 @@
 'gravy','turkey'
 'lettuce','salad'
 'cheese','taco'
+'apple','applesauce'
+'tomato','spaghetti'
+'milk','milkshake'
