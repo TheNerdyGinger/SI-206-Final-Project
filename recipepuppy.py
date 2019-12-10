@@ -13,16 +13,10 @@ def get_data(ingredients, recipe):
     return data2
 
 
-
-
-
 def read_file(filename):
     with open(filename) as f:
         lines = f.readlines()
     return lines
-
-
-
 
 
 def create_tuples(filename):
@@ -38,7 +32,6 @@ def create_tuples(filename):
         ingredient_names = results[0]['ingredients']
         if (recipe_name, ingredient_names) not in recipelist:
             recipelist.append((recipe_name, ingredient_names))
-
     return recipelist
 
 
@@ -96,5 +89,6 @@ def create_database(filename):
     
 
     conn.commit()
+    return 'Added entry to database'
 
 print(create_database('foodquest.db'))
