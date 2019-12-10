@@ -44,21 +44,28 @@ def create_tuples(filename):
 
 
 def create_database(filename):
-    conn = sqlite3.connect("Recipes.sqlite")
+    conn = sqlite3.connect(filename)
     cur = conn.cursor()
-    data = create_tuples(filename)
+    data = create_tuples('recipes.txt')
 
     cur.execute('CREATE TABLE IF NOT EXISTS Recipes(recipe_id INTEGER, recipenames TEXT)')
 
-    # ADD NEXT ENTRY TO DATABASE-------------------------------------------------------------------
+    # ADD NEXT RECIPE TO DATABASE-------------------------------------------------------------------
 
     cur.execute('SELECT * FROM Recipes WHERE recipe_id = (SELECT MAX(recipe_id) FROM Recipes)')
     start = cur.fetchone()
+    recipename = 0
     if start:
         start = start[0] + 1
     else:
         start = 0
-    recipename = data[start][0]
+    if start < len(data):
+        recipename = data[start][0]
+    else:
+        print('NO NEW RECIPES')
+        
+        
+
     cur.execute('INSERT INTO Recipes (recipe_id, recipenames) VALUES (?,?)', (start, recipename))
     
     
@@ -90,4 +97,4 @@ def create_database(filename):
 
     conn.commit()
 
-print(create_database('recipes.txt'))
+print(create_database('foodquest.db'))
