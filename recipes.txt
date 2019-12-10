@@ -1,3 +1,4 @@
 'eggs','omelet'
 'beef','hamburger'
 'gravy','turkey'
+'lettuce','salad'
