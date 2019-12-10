@@ -47,7 +47,7 @@ def get_distances(cur, conn):
     conn.commit()
 
 def get_shortest_distance(tup, cur, distances):
-    cur.execute("SELECT country_id FROM Brand_countries_sold WHERE brand_id = ?", (tup[1],))
+    cur.execute("SELECT country_id FROM Brand_countries_sold WHERE brand_id = ?", (tup[0],))
     countries_to_check = cur.fetchall()
     min_distance = distances[countries_to_check[0][0]]
     for c in countries_to_check:
@@ -55,16 +55,28 @@ def get_shortest_distance(tup, cur, distances):
             min_distance = distances[c[0]]
     return min_distance
 
+def insert_combined_score(start, brands_and_scores, cur, conn):
+    for b in brands_and_scores:
+        query = "INSERT INTO Combined_score (ingredient_id, brand_id, score) VALUES (?, ?, ?)"
+        values = (start, b[0], b[1])
+        cur.execute(query, values)
+    conn.commit()
+
+def insert_best_brand(start, brand, cur, conn):
+    query = "INSERT INTO Best_brands(ingredient_id, brand_id) VALUES (?, ?)"
+    values = (start, brand)
+    cur.execute(query, values)
+    conn.commit()
 
 def combine(cur, conn):
-    get_distances(cur, conn)
+    # get_distances(cur, conn)
     # cur.execute("DROP TABLE IF EXISTS Combined_score")
-    cur.execute("CREATE TABLE IF NOT EXISTS Combined_score (ing_id, brand_id INTEGER, score REAL)")
-    cur.execute("CREATE TABLE IF NOT EXISTS Best_brands (ing_id INTEGER, brand_id INTEGER)")
-    cur.execute("CREATE TABLE IF NOT EXISTS Recipes_and_best_brands (rec_id INTEGER, brand_id INTEGER)")
+    cur.execute("CREATE TABLE IF NOT EXISTS Combined_score (ingredient_id, brand_id INTEGER, score REAL)")
+    cur.execute("CREATE TABLE IF NOT EXISTS Best_brands (ingredient_id INTEGER, brand_id INTEGER)")
+    # cur.execute("CREATE TABLE IF NOT EXISTS Recipes_and_best_brands (ingredient_id INTEGER, brand_id INTEGER)")
 
     #determine start point
-    cur.execute("SELECT * FROM Combined_score WHERE ing_id = (SELECT MAX(ing_id) FROM Combined_score)")
+    cur.execute("SELECT * FROM Combined_score WHERE ingredient_id = (SELECT MAX(ingredient_id) FROM Combined_score)")
     start = cur.fetchone()
     if start:
         start= start[0]+1
@@ -72,7 +84,7 @@ def combine(cur, conn):
         start = 0
 
 
-    cur.execute("SELECT brand_id, nut_score FROM Brands_and_scores WHERE ing_id = ?", (start,))
+    cur.execute("SELECT brand_id, nut_score FROM Brands_and_scores WHERE ingredient_id = ?", (start,))
     brands_and_scores = cur.fetchall()
 
     #get countries sold
@@ -102,9 +114,8 @@ def combine(cur, conn):
         min_distance = get_shortest_distance(brands_and_scores[index], cur, distances)
         brands_and_scores[index] =  (brands_and_scores[index][0],  brands_and_scores[index][1], min_distance)
         index+=1
-    # sorted(student_tuples, key=itemgetter(1,2))
     subtractor = 1 / index #what to subtract from each score based on it's distance
-    # shortened_list = sorted(brands_and_scores[0:index], key = lambda x: x[2])
+
     brands_and_scores[0:index] = sorted(brands_and_scores[0:index], key = itemgetter(2) )
     count = 0
     for b in brands_and_scores[0:index]:
@@ -112,12 +123,15 @@ def combine(cur, conn):
         count +=1
 
 
+    insert_combined_score(start, brands_and_scores, cur, conn)
+    insert_best_brand(start, brands_and_scores[0][0], cur, conn)
+
 def main():
     #only have in one file
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
+    
     combine(cur, conn)
-
 
 if __name__ == "__main__":
     main()

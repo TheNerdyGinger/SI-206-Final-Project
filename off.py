@@ -21,15 +21,15 @@ def setUpDatabase(db_name):
 
 def set_up_ing_table(cur, conn):
     cur.execute("DROP TABLE IF EXISTS Ingredients")
-    cur.execute("CREATE TABLE Ingredients (ing_id INTEGER, ingredient TEXT)")
+    cur.execute("CREATE TABLE Ingredients (ingredient_id INTEGER, ingredient TEXT)")
 
-    query = "INSERT INTO Ingredients (ing_id, ingredient) VALUES (?, ?)"
+    query = "INSERT INTO Ingredients (ingredient_id, ingredient) VALUES (?, ?)"
     values = (0, "Flour")
     cur.execute(query, values)
-    query = "INSERT INTO Ingredients (ing_id, ingredient) VALUES (?, ?)"
+    query = "INSERT INTO Ingredients (ingredient_id, ingredient) VALUES (?, ?)"
     values = (1, "Milk")
     cur.execute(query, values)
-    query = "INSERT INTO Ingredients (ing_id, ingredient) VALUES (?, ?)"
+    query = "INSERT INTO Ingredients (ingredient_id, ingredient) VALUES (?, ?)"
     values = (2, "Butter")
     cur.execute(query, values)
     conn.commit()
@@ -104,9 +104,9 @@ def format_countries(countries, cur, conn):
             else:
                 bookmark = 0
 
-            query ="INSERT INTO Countries(country_id, country ) VALUES (?, ?)"
+            query ="INSERT INTO Countries(country_id, country) VALUES (?, ?)"
             values = (bookmark, s)
-            cur.execute(query,values)
+            cur.execute(query, values)
             
             query ="INSERT INTO Lat_lng(country_id, latitude, longitude) VALUES (?, ?, ?)"
             values = (bookmark, lat, lng)
@@ -122,7 +122,7 @@ def format_countries(countries, cur, conn):
 
 
 
-def insert_into_tables(cur, conn, index, product_name, nutriscore, countries, ing_id):
+def insert_into_tables(cur, conn, index, product_name, nutriscore, countries, ingredient_id):
     #get last row
     cur.execute("SELECT * FROM Brands_and_scores ORDER BY brand_id DESC LIMIT 1")
     bookmark = cur.fetchone()
@@ -132,9 +132,9 @@ def insert_into_tables(cur, conn, index, product_name, nutriscore, countries, in
         bookmark = 0
     
     #Brands and scores insert
-    query = "INSERT INTO Brands_and_scores (brand_id, brand, ing_id, nut_score) VALUES (?, ?, ?, ?)"
+    query = "INSERT INTO Brands_and_scores (brand_id, brand, ingredient_id, nut_score) VALUES (?, ?, ?, ?)"
   
-    values = (bookmark, product_name, ing_id, nutriscore)
+    values = (bookmark, product_name, ingredient_id, nutriscore)
     cur.execute(query, values)
 
     #countries sold insert
@@ -146,7 +146,7 @@ def insert_into_tables(cur, conn, index, product_name, nutriscore, countries, in
 
 
 
-def parse_json(data, cur, conn, ing_id):
+def parse_json(data, cur, conn, ingredient_id):
     count = 0
     index = 0
     
@@ -184,23 +184,23 @@ def parse_json(data, cur, conn, ing_id):
             index += 1
             continue
 
-        insert_into_tables(cur, conn, count, product_name, nutriscore, countries, ing_id)
+        insert_into_tables(cur, conn, count, product_name, nutriscore, countries, ingredient_id)
         index +=1
         count+=1
 
 
 def request_url(cur, conn):
     #DROPS DELETE/COMMENT OUT WHEN NOT NEEDED
-    #cur.execute("DROP TABLE IF EXISTS Brands_and_scores")
-    #cur.execute("DROP TABLE IF EXISTS Brand_countries_sold")
+    # cur.execute("DROP TABLE IF EXISTS Brands_and_scores")
+    # cur.execute("DROP TABLE IF EXISTS Brand_countries_sold")
 
-    cur.execute("CREATE TABLE IF NOT EXISTS Brands_and_scores (brand_id, brand, ing_id, nut_score)")
+    cur.execute("CREATE TABLE IF NOT EXISTS Brands_and_scores (brand_id, brand, ingredient_id, nut_score)")
     cur.execute("CREATE TABLE IF NOT EXISTS Brand_countries_sold (brand_id, country_id)")
     
     bookmark = open("off_bookmark.txt", 'r')
     pos = int(bookmark.read())
     #get last row
-    cur.execute("SELECT * FROM Ingredients ORDER BY ing_id DESC LIMIT 1")
+    cur.execute("SELECT * FROM Ingredients ORDER BY ingredient_id DESC LIMIT 1")
     check = cur.fetchone()[0]
 
     if(pos > check):
@@ -210,7 +210,7 @@ def request_url(cur, conn):
 
 
 
-    cur.execute("SELECT ingredient FROM Ingredients WHERE ing_id = ?", (pos,))
+    cur.execute("SELECT ingredient FROM Ingredients WHERE ingredient_id = ?", (pos,))
     ing = cur.fetchone()[0]
     ing = format_ingredient_name(ing)
 
@@ -238,7 +238,7 @@ def main():
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
     # set_up_ing_table(cur,conn)
-   # set_up_country_table(cur, conn)
+    # set_up_country_table(cur, conn)
     request_url(cur, conn)
 
 if __name__ == "__main__":
