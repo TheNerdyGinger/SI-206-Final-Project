@@ -208,8 +208,6 @@ def request_url(cur, conn):
         bookmark.close()
         return
 
-
-
     cur.execute("SELECT ingredient FROM Ingredients WHERE ingredient_id = ?", (pos,))
     ing = cur.fetchone()[0]
     ing = format_ingredient_name(ing)
