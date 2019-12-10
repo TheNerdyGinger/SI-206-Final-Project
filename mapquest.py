@@ -24,6 +24,7 @@ def get_countries(filename):
     
     for n in data.split(','):
         m = n.replace('\cb3 ', '').replace('\cb1', '')
+        m = m.replace('}', '')
         country_list.append(''.join(m.split('\\')))
         
     for n in country_list:
@@ -38,17 +39,18 @@ def get_countries(filename):
 
 
 
-def get_mapquest(country_list, cur, conn):
+def get_mapquest(country_list, cur, conn, start):
     coord_list = []
     key = '5BPqkMyJdoFaGeY6MfwAbOk73xXK5Kq9'
     base_url = 'https://www.mapquestapi.com/geocoding/v1/address?key='
 
-    cur.execute("DROP TABLE IF EXISTS Countries")
-    cur.execute("DROP TABLE IF EXISTS Lat_lng")
-    cur.execute("CREATE TABLE Countries (country_id INTEGER, country TEXT)")
-    cur.execute("CREATE TABLE Lat_lng (country_id INTEGER, latitude REAL, longitude REAL)")
+    # cur.execute("DROP TABLE IF EXISTS Countries")
+    # cur.execute("DROP TABLE IF EXISTS Lat_lng")
     
-    for n in range(0, 20):
+    
+    for n in range(start, start + 20):
+        if n >= 239:
+            break
         url = base_url + key + '&inFormat=kvp&outFormat=json&location=' + country_list[n] + '&thumbMaps=false'
         cur.execute("INSERT INTO Countries (country_id,country) VALUES (?,?)",(n,country_list[n]))
         
@@ -75,10 +77,10 @@ def get_mapquest(country_list, cur, conn):
         
    
 
-def get_distance(coord_list, cur, conn):
+def get_distance(coord_list, cur, conn, start):
     url = 'https://www.mapquestapi.com/geocoding/v1/address?key=5BPqkMyJdoFaGeY6MfwAbOk73xXK5Kq9&inFormat=kvp&outFormat=json&location=AnnArbor&thumbMaps=false'
-    cur.execute("DROP TABLE IF EXISTS Distances")
-    cur.execute("CREATE TABLE Distances (country_id INTEGER, distance REAL)")
+    # cur.execute("DROP TABLE IF EXISTS Distances")
+    
     
     
     try:
@@ -93,22 +95,39 @@ def get_distance(coord_list, cur, conn):
     aa_coords = (latitude, longitude)
     
     #print(aa_coords)
-    
+    if start >= 239:
+        print("No more countries to input")
+        return
     for n in range(len(coord_list)):
+        if start >= 239:
+            print("No more countries to input")
+            return
         distance_from_aa = distance.distance(aa_coords, coord_list[n]).kilometers
-        cur.execute("INSERT INTO Distances (country_id,distance) VALUES (?,?)",(n,distance_from_aa))
+        cur.execute("INSERT INTO Distances (country_id,distance) VALUES (?,?)",(start,distance_from_aa))
+        start += 1
         #print(distance_from_aa)
 
     conn.commit()
-    return distance_from_aa
+
 
 
 def main():
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
     country_list = get_countries('countries.csv')
-    coordinate_list = get_mapquest(country_list, cur, conn) 
-    get_distance(coordinate_list, cur, conn)
+    cur.execute("CREATE TABLE IF NOT EXISTS Countries (country_id INTEGER, country TEXT)")
+    cur.execute("CREATE TABLE IF NOT EXISTS Lat_lng (country_id INTEGER, latitude REAL, longitude REAL)")
+    cur.execute("CREATE TABLE IF NOT EXISTS Distances (country_id INTEGER, distance REAL)")
+
+    cur.execute('SELECT * FROM Countries WHERE country_id= (SELECT MAX(country_id) FROM Countries)')
+    start = cur.fetchone()
+    if start:
+        start = start[0] + 1
+    else:
+        start = 0
+
+    coordinate_list = get_mapquest(country_list, cur, conn, start) 
+    get_distance(coordinate_list, cur, conn, start)
 
 
 
