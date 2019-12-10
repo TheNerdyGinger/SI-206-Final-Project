@@ -60,26 +60,25 @@ def create_database(filename):
         start = 0
     recipename = data[start][0]
     cur.execute('INSERT INTO Recipes (recipe_id, recipenames) VALUES (?,?)', (start, recipename))
-    start += 1
+    
     
     #INGREDIENTS---------------------------------------------------------------------------------
 
 
     cur.execute('CREATE TABLE IF NOT EXISTS Ingredients (ingredient_id INTEGER, ingredient TEXT)')
-    cur.execute('SELECT * FROM Ingredients WHERE ingredient_id = (SELECT MIN(ingredient_id) FROM Ingredients)')
+    cur.execute('SELECT * FROM Ingredients WHERE ingredient_id = (SELECT MAX(ingredient_id) FROM Ingredients)')
     start2 = cur.fetchone()
     if start2:
         start2 = start2[0] + 1
     else:
         start2 = 0
 
-    ingredients = data[start2][1]
+    ingredients = data[start][1]
     ing = [i for i in ingredients.split(',')]
-    count = 0
     for i in ing:
-        cur.execute('INSERT INTO Ingredients (ingredient_id, ingredient) VALUES(?,?)', (count, i))
-        count += 1
-    start2 + 1
+        cur.execute('INSERT INTO Ingredients (ingredient_id, ingredient) VALUES(?,?)', (start2, i))
+        start2 += 1
+    
         
 
     conn.commit()
