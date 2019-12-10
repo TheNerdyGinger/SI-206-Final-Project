@@ -73,6 +73,10 @@ def format_ingredient_name(ing):
     ing = engine.plural(ing)
     ing = ing.replace(" ", "-")
     return ing
+def format_ingredient_no_plural(ing):
+    ing = ing.lower()
+    ing = ing.replace(" ", "-")
+    return ing
     
 #Format country names to check if they are in the table. Convert them to their IDS for storage
 def format_countries(countries, cur, conn):
@@ -182,7 +186,7 @@ def parse_json(data, cur, conn, ingredient_id):
         nutriscore = d.get("nutriscore_grade", -1)
         #if not found, use novagroup
         if nutriscore == -1:
-            nova_group= d.get('nova_group', -1)
+            nova_group= int(d.get('nova_group', -1))
 
             #if nova group not found either, skip this brand
             if (nova_group == -1):
@@ -190,11 +194,11 @@ def parse_json(data, cur, conn, ingredient_id):
                 continue
 
             #novagroup gets 'better' as it decreases. Opposite of nutriscore
-            if(nova_group== 4):
+            if(nova_group == 4):
                 nutriscore = 1
             elif(nova_group == 3):
                 nutriscore = 2
-            elif(nova_group== 2)
+            elif(nova_group == 2):
                 nutriscore = 4
             elif(nova_group == 1):
                 nutriscore = 5
@@ -245,19 +249,34 @@ def request_url(cur, conn):
 
     cur.execute("SELECT ingredient FROM Ingredients WHERE ingredient_id = ?", (pos,))
     ing = cur.fetchone()[0]
-    ing = format_ingredient_name(ing)
+    plural_ing = format_ingredient_name(ing)
 
     try:
-        url =  'https://fr-en.openfoodfacts.org/category/{}/1.json'
-        request_url = url.format(ing)
+        url =  'https://world.openfoodfacts.org/category/{}/1.json'
+        request_url = url.format(plural_ing)
         r = requests.get(request_url)
         data = json.loads(r.text)
         
     except:
         print("Error reading from url")
         data = []
+
+    #If category not found, try again with a non-pluralized name
     if data['count'] == 0:
-        insert_if_not_found(cur, conn, pos)
+        ing = format_ingredient_no_plural(ing)
+        try:
+            url =  'https://world.openfoodfacts.org/category/{}/1.json'
+            request_url = url.format(ing)
+            r = requests.get(request_url)
+            data2 = json.loads(r.text)
+            
+        except:
+            print("Error reading from url")
+            data = []
+        if data2['count'] == 0:
+            insert_if_not_found(cur, conn, pos)
+        else:
+            parse_json(data, cur, conn, pos) 
     else:
         parse_json(data, cur, conn, pos) 
     bookmark.close()
