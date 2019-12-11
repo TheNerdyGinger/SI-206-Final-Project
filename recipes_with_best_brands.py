@@ -9,41 +9,6 @@ def setUpDatabase(db_name):
     return cur, conn
 
 
-def create_sample_recipe_table(cur, conn): #for testing. remove when we have real data
-    cur.execute('CREATE TABLE IF NOT EXISTS Recipes(recipe_id INTEGER, recipename TEXT)')
-    cur.execute('CREATE TABLE IF NOT EXISTS Recipes_and_ingredients(recipe_id INTEGER, ingredient_id INTEGER)')
-
-    query = "INSERT INTO Recipes(recipe_id, recipename) VALUES (?,?)"
-    values = (0, "omlet")
-    cur.execute(query,values)
-    
-    query = "INSERT INTO Recipes(recipe_id, recipename) VALUES (?,?)"
-    values = (1, "Pizza")
-    cur.execute(query,values)
-
-    query = "INSERT INTO Recipes(recipe_id, recipename) VALUES (?,?)"
-    values = (2, "burger")
-    cur.execute(query,values)
-
-    query = "INSERT INTO Recipes_and_ingredients(recipe_id, ingredient_id) VALUES (?,?)"
-    values = (0, 0)
-    cur.execute(query,values)
-    query = "INSERT INTO Recipes_and_ingredients(recipe_id, ingredient_id) VALUES (?,?)"
-    values = (0, 1)
-    cur.execute(query,values)
-
-    query = "INSERT INTO Recipes_and_ingredients(recipe_id, ingredient_id) VALUES (?,?)"
-    values = (1, 1)
-    cur.execute(query,values)
-
-    query = "INSERT INTO Recipes_and_ingredients(recipe_id, ingredient_id) VALUES (?,?)"
-    values = (2, 2)
-    cur.execute(query,values)
-    query = "INSERT INTO Recipes_and_ingredients(recipe_id, ingredient_id) VALUES (?,?)"
-    values = (2, 0)
-    cur.execute(query,values)
-
-    conn.commit()
 def main():
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
@@ -58,6 +23,12 @@ def main():
         start= start[0]+1
     else:
         start = 0
+    
+    cur.execute("SELECT * FROM Recipes WHERE recipe_id = (SELECT MAX(recipe_id) FROM Recipes)")
+    check = cur.fetchone()[0]
+    if(start > check):
+        print("No more recipes to check")
+        return
 
     cur.execute("SELECT ingredient_id FROM Recipes_and_ingredients WHERE recipe_id = ?", (start,))
     ings = cur.fetchall()
