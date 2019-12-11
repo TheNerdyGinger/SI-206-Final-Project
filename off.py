@@ -19,53 +19,6 @@ def setUpDatabase(db_name):
     cur = conn.cursor()
     return cur, conn
 
-# def set_up_ing_table(cur, conn):
-#     cur.execute("DROP TABLE IF EXISTS Ingredients")
-#     cur.execute("CREATE TABLE Ingredients (ingredient_id INTEGER, ingredient TEXT)")
-
-#     query = "INSERT INTO Ingredients (ingredient_id, ingredient) VALUES (?, ?)"
-#     values = (0, "Flour")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Ingredients (ingredient_id, ingredient) VALUES (?, ?)"
-#     values = (1, "Milk")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Ingredients (ingredient_id, ingredient) VALUES (?, ?)"
-#     values = (2, "Butter")
-#     cur.execute(query, values)
-#     conn.commit()
-
-# def set_up_country_table(cur, conn):
-#     cur.execute("DROP TABLE IF EXISTS Countries")
-#     cur.execute("DROP TABLE IF EXISTS Distances")
-#     cur.execute("DROP TABLE IF EXISTS Lat_lng")
-#     cur.execute("CREATE TABLE Countries (country_id INTEGER, country TEXT)")
-#     cur.execute("CREATE TABLE Lat_lng (country_id INTEGER, latitude REAL, longitude REAL)")
-#     cur.execute("CREATE TABLE Distances (country_id INTEGER, distance REAL)")
-
-#     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
-#     values = (0, "France")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
-#     values = (1, "United States")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
-#     values = (2, "Spain")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
-#     values = (3, "Germany")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
-#     values = (4, "United Kingdom")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
-#     values = (5, "Brazil")
-#     cur.execute(query, values)
-#     query = "INSERT INTO Countries (country_id, country) VALUES (?, ?)"
-#     values = (6, "Portugal")
-#     cur.execute(query, values)
- 
-#     conn.commit()
-
 def format_ingredient_name(ing):
     engine = inflect.engine()
     ing = ing.lower()
@@ -226,6 +179,10 @@ def parse_json(data, cur, conn, ingredient_id):
         insert_into_tables(cur, conn, count, product_name, nutriscore, countries, ingredient_id)
         index +=1
         count+=1
+    #if no brands inserted, insert the defaults
+    if(count==0):
+        insert_if_not_found(cur, conn, ingredient_id)
+        
 
 
 def request_url(cur, conn):
@@ -276,7 +233,7 @@ def request_url(cur, conn):
         if data2['count'] == 0:
             insert_if_not_found(cur, conn, pos)
         else:
-            parse_json(data, cur, conn, pos) 
+            parse_json(data2, cur, conn, pos) 
     else:
         parse_json(data, cur, conn, pos) 
     bookmark.close()
