@@ -13,38 +13,38 @@ def setUpDatabase(db_name):
     return cur, conn
 
 #for testing, remove when we have mapquest data
-def get_distances(cur, conn):
-    url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location=Ann-Arbor&thumbMaps=false"
-    r = requests.get(url)
-    data = json.loads(r.text)
-    lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
-    lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
-    coords_1 = (lat,lng)
+# def get_distances(cur, conn):
+#     url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location=Ann-Arbor&thumbMaps=false"
+#     r = requests.get(url)
+#     data = json.loads(r.text)
+#     lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
+#     lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
+#     coords_1 = (lat,lng)
 
-    for i in range(0, 7):
-        cur.execute("SELECT country FROM Countries WHERE country_id = ?", (i,))
-        c = cur.fetchone()
-        url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location={}&thumbMaps=false"
-        request_url = url.format(c)
-        r = requests.get(request_url)
-        data = json.loads(r.text)
-        lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
-        lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
+#     for i in range(0, 7):
+#         cur.execute("SELECT country FROM Countries WHERE country_id = ?", (i,))
+#         c = cur.fetchone()
+#         url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location={}&thumbMaps=false"
+#         request_url = url.format(c)
+#         r = requests.get(request_url)
+#         data = json.loads(r.text)
+#         lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
+#         lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
 
-        coords_2 = (lat, lng)
-        distance = geopy.distance.distance(coords_1, coords_2).km
+#         coords_2 = (lat, lng)
+#         distance = geopy.distance.distance(coords_1, coords_2).km
 
-        # cur.execute("SELECT * FROM Countries ORDER BY country_id DESC LIMIT 1")
-        # bookmark = cur.fetchone()
-        # if bookmark:
-        #     bookmark = bookmark[0]+1
-        # else:
-        #     bookmark = 0
+#         # cur.execute("SELECT * FROM Countries ORDER BY country_id DESC LIMIT 1")
+#         # bookmark = cur.fetchone()
+#         # if bookmark:
+#         #     bookmark = bookmark[0]+1
+#         # else:
+#         #     bookmark = 0
 
-        query ="INSERT INTO Distances(country_id, distance) VALUES (?, ?)"
-        values = (i, distance)
-        cur.execute(query, values)
-    conn.commit()
+#         query ="INSERT INTO Distances(country_id, distance) VALUES (?, ?)"
+#         values = (i, distance)
+#         cur.execute(query, values)
+#     conn.commit()
 
 def get_shortest_distance(tup, cur, distances):
     cur.execute("SELECT country_id FROM Brand_countries_sold WHERE brand_id = ?", (tup[0],))
@@ -69,8 +69,6 @@ def insert_best_brand(start, brand, cur, conn):
     conn.commit()
 
 def combine(cur, conn):
-    # get_distances(cur, conn)
-    # cur.execute("DROP TABLE IF EXISTS Combined_score")
     cur.execute("CREATE TABLE IF NOT EXISTS Combined_score (ingredient_id, brand_id INTEGER, score REAL)")
     cur.execute("CREATE TABLE IF NOT EXISTS Best_brands (ingredient_id INTEGER, brand_id INTEGER)")
     # cur.execute("CREATE TABLE IF NOT EXISTS Recipes_and_best_brands (ingredient_id INTEGER, brand_id INTEGER)")
@@ -83,6 +81,12 @@ def combine(cur, conn):
     else:
         start = 0
 
+    #check if we've reached end of list
+    cur.execute("SELECT ingredient_id FROM Ingredients WHERE ingredient_id = (SELECT MAX(ingredient_id) FROM Ingredients)")
+    check= cur.fetchone()
+    if(start >check[0]):
+        print("No more ingredients to check")
+        return
 
     cur.execute("SELECT brand_id, nut_score FROM Brands_and_scores WHERE ingredient_id = ?", (start,))
     brands_and_scores = cur.fetchall()
@@ -110,7 +114,7 @@ def combine(cur, conn):
 
     #determine best countries for each brand with the max score
     index = 0
-    while brands_and_scores[index][1] == max_score:
+    while index < len(brands_and_scores) and brands_and_scores[index][1] == max_score:
         min_distance = get_shortest_distance(brands_and_scores[index], cur, distances)
         brands_and_scores[index] =  (brands_and_scores[index][0],  brands_and_scores[index][1], min_distance)
         index+=1
