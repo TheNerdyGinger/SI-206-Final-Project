@@ -35,10 +35,10 @@ def main():
     
     for i in ings:
         cur.execute("SELECT brand_id FROM Best_brands WHERE ingredient_id = ?", (i[0],))
-        b = cur.fetchone()
+        best_brand = cur.fetchone()[0]
         
         query = "INSERT INTO Recipes_and_best_brands(recipe_id, brand_id) VALUES (?,?)"
-        values = (start, b[0])
+        values = (start, best_brand)
         cur.execute(query,values)
 
     conn.commit()

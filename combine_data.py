@@ -12,40 +12,6 @@ def setUpDatabase(db_name):
     cur = conn.cursor()
     return cur, conn
 
-#for testing, remove when we have mapquest data
-# def get_distances(cur, conn):
-#     url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location=Ann-Arbor&thumbMaps=false"
-#     r = requests.get(url)
-#     data = json.loads(r.text)
-#     lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
-#     lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
-#     coords_1 = (lat,lng)
-
-#     for i in range(0, 7):
-#         cur.execute("SELECT country FROM Countries WHERE country_id = ?", (i,))
-#         c = cur.fetchone()
-#         url = "https://www.mapquestapi.com/geocoding/v1/address?key=eG2u4AiKGQtV2YBYLgLkKrQLy54uvW9s&inFormat=kvp&outFormat=json&location={}&thumbMaps=false"
-#         request_url = url.format(c)
-#         r = requests.get(request_url)
-#         data = json.loads(r.text)
-#         lat = data["results"][0]['locations'][0]['displayLatLng']['lat']
-#         lng = data["results"][0]['locations'][0]['displayLatLng']['lng']
-
-#         coords_2 = (lat, lng)
-#         distance = geopy.distance.distance(coords_1, coords_2).km
-
-#         # cur.execute("SELECT * FROM Countries ORDER BY country_id DESC LIMIT 1")
-#         # bookmark = cur.fetchone()
-#         # if bookmark:
-#         #     bookmark = bookmark[0]+1
-#         # else:
-#         #     bookmark = 0
-
-#         query ="INSERT INTO Distances(country_id, distance) VALUES (?, ?)"
-#         values = (i, distance)
-#         cur.execute(query, values)
-#     conn.commit()
-
 def get_shortest_distance(tup, cur, distances):
     cur.execute("SELECT country_id FROM Brand_countries_sold WHERE brand_id = ?", (tup[0],))
     countries_to_check = cur.fetchall()
