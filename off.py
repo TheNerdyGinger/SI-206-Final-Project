@@ -80,24 +80,24 @@ def format_countries(countries, cur, conn):
 
 
 
-def insert_into_tables(cur, conn, index, product_name, nutriscore, countries, ingredient_id):
+def insert_into_tables(cur, conn, product_name, nutriscore, countries, ingredient_id):
     #get last row
     cur.execute("SELECT * FROM Brands_and_scores ORDER BY brand_id DESC LIMIT 1")
-    bookmark = cur.fetchone()
-    if bookmark:
-        bookmark = bookmark[0]+1
+    brand_id = cur.fetchone()
+    if brand_id:
+        brand_id = brand_id[0]+1
     else:
-        bookmark = 0
+        brand_id = 0
     
     #Brands and scores insert
     query = "INSERT INTO Brands_and_scores (brand_id, brand, ingredient_id, nut_score) VALUES (?, ?, ?, ?)"
-    values = (bookmark, product_name, ingredient_id, nutriscore)
+    values = (brand_id, product_name, ingredient_id, nutriscore)
     cur.execute(query, values)
 
     #countries sold insert
     for c_id in countries:
         query = "INSERT INTO Brand_countries_sold (brand_id, country_id) VALUES (?,?)"
-        values = (bookmark, c_id)
+        values = (brand_id, c_id)
         cur.execute(query, values)
     conn.commit()
 
@@ -176,7 +176,7 @@ def parse_json(data, cur, conn, ingredient_id):
             index += 1
             continue
 
-        insert_into_tables(cur, conn, count, product_name, nutriscore, countries, ingredient_id)
+        insert_into_tables(cur, conn, product_name, nutriscore, countries, ingredient_id)
         index +=1
         count+=1
     #if no brands inserted, insert the defaults
