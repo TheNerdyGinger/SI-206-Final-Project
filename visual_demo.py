@@ -24,8 +24,9 @@ def grab_wordcloud_data(cur, conn):
     output_table = cur.fetchall()
     ingredient_string = ""
     for output in output_table:
-        ingredient_string = ingredient_string + " " + output[1]
-
+        if ' ' in output[1]:
+            ingredient_string = ingredient_string + " " + output[1].replace(' ', '_')
+    print(ingredient_string)
     return ingredient_string
 
 def word_cloud(word_string):
@@ -240,14 +241,14 @@ def barchart(ingredient_score_dict, recipe_score_dict):
 
 def main():
     cur, conn = setUpDatabase('foodquest.db')
-    #ingredient_string = grab_wordcloud_data(cur, conn)
-    #word_cloud(ingredient_string)
+    ingredient_string = grab_wordcloud_data(cur, conn)
+    word_cloud(ingredient_string)
     #country_list = grab_pie_data(cur, conn)
     #country_list2 = pie_graph(country_list)
     #coord_list = grab_staticmap_data(cur, conn, country_list2)
     #staticmap(coord_list)
-    ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
-    barchart(ingredient_score_dict, recipe_score_dict)
+    #ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
+    #barchart(ingredient_score_dict, recipe_score_dict)
 
 if __name__ == "__main__":
     main()
