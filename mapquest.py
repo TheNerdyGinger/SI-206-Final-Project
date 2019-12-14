@@ -13,7 +13,6 @@ def setUpDatabase(db_name):
 
 
 def get_countries(filename):
-    #alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '\n', ]
     country_list = []
     country_list_clean = []
     country_list_final = []
@@ -44,8 +43,6 @@ def get_mapquest(country_list, cur, conn, start):
     key = '5BPqkMyJdoFaGeY6MfwAbOk73xXK5Kq9'
     base_url = 'https://www.mapquestapi.com/geocoding/v1/address?key='
 
-    # cur.execute("DROP TABLE IF EXISTS Countries")
-    # cur.execute("DROP TABLE IF EXISTS Lat_lng")
     
     
     for n in range(start, start + 20):
@@ -83,18 +80,21 @@ def get_distance(coord_list, cur, conn, start):
     
     
     
-    try:
+    '''try:
         r = requests.get(url)
         dict = json.loads(r.text)      
     except:
         print("Error when reading from url")
-        dict = {}
+        dict = {}'''
 
-    latitude = dict["results"][0]['locations'][0]['displayLatLng']['lat']
-    longitude = dict["results"][0]['locations'][0]['displayLatLng']['lng']
+    cur.execute("SELECT latitude, longitude FROM Lat_lng")
+    for row in cur:
+        latitude = row[0]
+        longitude = row[1]
+    #latitude = dict["results"][0]['locations'][0]['displayLatLng']['lat']
+    #longitude = dict["results"][0]['locations'][0]['displayLatLng']['lng']
     aa_coords = (latitude, longitude)
     
-    #print(aa_coords)
     if start >= 239:
         print("No more countries to input")
         return
@@ -105,7 +105,7 @@ def get_distance(coord_list, cur, conn, start):
         distance_from_aa = distance.distance(aa_coords, coord_list[n]).kilometers
         cur.execute("INSERT INTO Distances (country_id,distance) VALUES (?,?)",(start,distance_from_aa))
         start += 1
-        #print(distance_from_aa)
+
 
     conn.commit()
 
@@ -135,16 +135,3 @@ if __name__ == "__main__":
     main()
     
     
-    
-    ''' 
-    get_countries - From a csv file of countries, returns list of those countries. Having trouble creating the list, removing extra data and spaces. 
-                    Potential problem with countries with multiple words, not sure if mapquest api will accept format
-
-    get_mapquest - Takes list of countries and returns coordines for those countries. Returns multiple coordinates, not sure which one to use.
-                    Appending coordinates to list and using list[0] seems to work well
-
-    get_distance - Takes in coorindate list from get_mapquest and uses geopy to calculate distance from AA. Works as expected
-
-    Do not create databases/visualizations until all functions work as expected
-
-    '''
