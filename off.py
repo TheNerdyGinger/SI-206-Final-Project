@@ -37,6 +37,7 @@ def format_countries(countries, cur, conn):
     for s in countries:
         s = s[3:]
         s = s.capitalize()
+        s = s.replace("-", " ")
         cur.execute("SELECT country_id FROM Countries WHERE country = ?", (s,))
         
 
