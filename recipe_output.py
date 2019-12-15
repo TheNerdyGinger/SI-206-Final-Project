@@ -16,6 +16,7 @@ def join_databases(cur, conn, filename):
     output_table = cur.fetchall()
 
     outfile = open(filename, 'w')
+    outfile.write("Recipes and Healthiest Brands as Ingredients\n\n")
     recipe_name = output_table[0][0]
     recipe_name = recipe_name.strip("\n")
     recipe_name = recipe_name.strip("\r")
@@ -33,7 +34,7 @@ def join_databases(cur, conn, filename):
             out_string += " " + o[1] + ','
 
     outfile.close()
-    return output_table
+    
 def main():
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
