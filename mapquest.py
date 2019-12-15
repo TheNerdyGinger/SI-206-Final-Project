@@ -39,11 +39,10 @@ def get_countries(filename):
 
 
 def get_mapquest(country_list, cur, conn, start):
-    coord_list = []
+    #coord_list = []
     key = '5BPqkMyJdoFaGeY6MfwAbOk73xXK5Kq9'
     base_url = 'https://www.mapquestapi.com/geocoding/v1/address?key='
 
-    
     
     for n in range(start, start + 20):
         if n >= 239:
@@ -62,38 +61,41 @@ def get_mapquest(country_list, cur, conn, start):
         latitude = dict["results"][0]['locations'][0]['displayLatLng']['lat']
         longitude = dict["results"][0]['locations'][0]['displayLatLng']['lng']
         
-        cur.execute("INSERT INTO Lat_lng (country_id,latitude, longitude) VALUES (?,?,?)",(n,latitude, longitude))
+        cur.execute("INSERT INTO Lat_lng (country_id, latitude, longitude) VALUES (?,?,?)",(n,latitude,longitude))
         
-        coords = (latitude, longitude)
-        coord_list.append(coords)
+        #coords = (latitude, longitude)
+        #coord_list.append(coords)
 
     
     conn.commit()
-    return coord_list
-
+    
         
    
 
-def get_distance(coord_list, cur, conn, start):
+def get_distance(cur, conn, start):
     url = 'https://www.mapquestapi.com/geocoding/v1/address?key=5BPqkMyJdoFaGeY6MfwAbOk73xXK5Kq9&inFormat=kvp&outFormat=json&location=AnnArbor&thumbMaps=false'
     # cur.execute("DROP TABLE IF EXISTS Distances")
     
-    
-    
-    '''try:
+    try:
         r = requests.get(url)
         dict = json.loads(r.text)      
     except:
         print("Error when reading from url")
-        dict = {}'''
-
-    cur.execute("SELECT latitude, longitude FROM Lat_lng")
+        dict = {}
+    
+    aa_latitude = dict["results"][0]['locations'][0]['displayLatLng']['lat']
+    aa_longitude = dict["results"][0]['locations'][0]['displayLatLng']['lng']
+    aa_coords = (aa_latitude, aa_longitude)
+    
+    
+    coord_list = []
+    cur.execute("SELECT latitude, longitude FROM Lat_lng WHERE country_id BETWEEN ? AND ?", (start, start + 19))
     for row in cur:
         latitude = row[0]
         longitude = row[1]
-    #latitude = dict["results"][0]['locations'][0]['displayLatLng']['lat']
-    #longitude = dict["results"][0]['locations'][0]['displayLatLng']['lng']
-    aa_coords = (latitude, longitude)
+        coord_list.append((latitude, longitude))
+    print(len(coord_list))
+    
     
     if start >= 239:
         print("No more countries to input")
@@ -105,6 +107,9 @@ def get_distance(coord_list, cur, conn, start):
         distance_from_aa = distance.distance(aa_coords, coord_list[n]).kilometers
         cur.execute("INSERT INTO Distances (country_id,distance) VALUES (?,?)",(start,distance_from_aa))
         start += 1
+    '''for n in range(len(coord_list)):
+        distance_from_aa = distance.distance(aa_coords, coord_list[n]).kilometers
+        cur.execute("INSERT INTO Distances (country_id,distance) VALUES (?,?)",(n,distance_from_aa))'''
 
 
     conn.commit()
@@ -126,12 +131,14 @@ def main():
     else:
         start = 0
 
-    coordinate_list = get_mapquest(country_list, cur, conn, start) 
-    get_distance(coordinate_list, cur, conn, start)
+    get_mapquest(country_list, cur, conn, start) 
+    get_distance(cur, conn, start)
 
 
 
 if __name__ == "__main__":
     main()
     
+    
+
     
