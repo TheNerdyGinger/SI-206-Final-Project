@@ -248,6 +248,8 @@ def main():
     #only have in one file
     db_name = "foodquest.db"
     cur, conn = setUpDatabase(db_name)
+    cur.execute("UPDATE Distances SET distance = 0 WHERE country_id = 225")
+    conn.commit()
     # set_up_ing_table(cur,conn)
     # set_up_country_table(cur, conn)
     request_url(cur, conn)
