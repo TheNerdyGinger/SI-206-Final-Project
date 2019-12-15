@@ -8,6 +8,7 @@ import sqlite3
 import json
 import os
 import webbrowser  
+import collections as col
 
 
 def setUpDatabase(db_name):
@@ -236,19 +237,59 @@ def barchart(ingredient_score_dict, recipe_score_dict):
     plt.tight_layout()
     fig2.savefig("recipe_graph.png")
     plt.show()
+
+### DAVID'S VISUALIZATIONS ------------------------------------------------------------
+
+def get_data(dbname,command):
+    conn = sqlite3.connect(dbname)
+    cur = conn.cursor()
+    cur.execute(command)
+    data = cur.fetchall()
+    return data
+
+def plot_bar_graph():
+    bar_graph_data = get_data('foodquest.db','SELECT Brand_id, score FROM Combined_score WHERE Ingredient_id=32')
+    ingredient_name = get_data('foodquest.db','SELECT Ingredient FROM Ingredients WHERE Ingredient_id=32')
+    name = str(ingredient_name[0][0])
+    sort = sorted(bar_graph_data, key=lambda x: x[0])
+    xvalue = [i[0] for i in sort]
+    yvalue = [i[1] for i in sort]
+    plt.bar(xvalue, yvalue, color=['green','blue','red'])
+    plt.xlabel('BrandID')
+    plt.ylabel('Scores')
+    plt.title('BrandIDs of pasta ranked by score')
+    plt.xticks(rotation=30)
+    plt.show()
+
+def plot_pie_chart():
+    pie_chart_data = get_data('foodquest.db','SELECT Ingredient_id, Ingredient FROM Ingredients')
+    recipeids = get_data('foodquest.db','SELECT recipe_id, ingredient_id from Recipes_and_ingredients')
+    recipenames = get_data('foodquest.db','SELECT recipenames FROM Recipes')
+    names = [i[0] for i in recipenames]
+    d = col.Counter([i[0] for i in recipeids])
+    ditems = d.items()
+    labels = [d[0] for d in ditems]
+    values = [d[1] for d in ditems]
+    patches, text = plt.pie(values, labels=values)
+    plt.legend(patches, names, loc='best', bbox_to_anchor = (0.2, 0.8), title='Number of Ingredients')
+    plt.axis('equal')
+    plt.show()
+    
   
    
 
 def main():
-    cur, conn = setUpDatabase('foodquest.db')
-    #ingredient_string = grab_wordcloud_data(cur, conn)
-    #word_cloud(ingredient_string)
-    #country_list = grab_pie_data(cur, conn)
-    #country_list2 = pie_graph(country_list)
-    #coord_list = grab_staticmap_data(cur, conn, country_list2)
-    #staticmap(coord_list)
-    ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
-    barchart(ingredient_score_dict, recipe_score_dict)
+    # cur, conn = setUpDatabase('foodquest.db')
+    # ingredient_string = grab_wordcloud_data(cur, conn)
+    # word_cloud(ingredient_string)
+    # country_list = grab_pie_data(cur, conn)
+    # country_list2 = pie_graph(country_list)
+    # coord_list = grab_staticmap_data(cur, conn, country_list2)
+    # staticmap(coord_list)
+    # ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
+    # barchart(ingredient_score_dict, recipe_score_dict)
+    bar = plot_bar_graph()
+    pie = plot_pie_chart()
 
 if __name__ == "__main__":
     main()
