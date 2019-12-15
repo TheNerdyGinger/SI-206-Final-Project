@@ -89,7 +89,7 @@ def get_distance(cur, conn, start):
     
     
     coord_list = []
-    cur.execute("SELECT latitude, longitude FROM Lat_lng")
+    cur.execute("SELECT latitude, longitude FROM Lat_lng WHERE country_id BETWEEN ? AND ?", (start, start + 19))
     for row in cur:
         latitude = row[0]
         longitude = row[1]
