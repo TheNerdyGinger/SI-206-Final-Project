@@ -175,6 +175,7 @@ def grab_barchart_data(cur, conn):
     recipe_tot = 0
     for output in output_table:
         for recipe in recipe_list:
+            recipe = recipe.strip('\n')
             if output[1] == recipe:
                 recipe_tot = ingredient_score_dict[output[2]]
                 if recipe in recipe_dict:
@@ -203,8 +204,8 @@ def barchart(ingredient_score_dict, recipe_score_dict):
     ylist_recipe = []
     tuple_list_recipe = []
     
-    fig = plt.figure(figsize=(5,5))
-    fig2 = plt.figure(figsize=(20,5))
+    fig = plt.figure(figsize=(10,10))
+    fig2 = plt.figure(figsize=(10,10))
     ax1 = fig.add_subplot(121)
     ax2 = fig2.add_subplot(121)
     for ingredient in ingredient_score_dict:
@@ -219,18 +220,17 @@ def barchart(ingredient_score_dict, recipe_score_dict):
         xlist_recipe.append(recipe)
         ylist_recipe.append(recipe_score_dict[recipe])
 
-    ax1.bar(xlist_ingredient, ylist_ingredient, color = 'red')
+    ax1.bar(xlist_ingredient, ylist_ingredient, align = 'center', color = 'red')
     ax1.set(xlabel='Ingredient', ylabel='Average Nutritional Score', title='Average Nutritional Score by Ingredient')
-    ax1.set_yticks(ax1.get_yticks())
-    plt.xticks(rotation = 90)
+    ax1.tick_params(axis="x", labelsize=5)
+    plt.setp(ax1.get_xticklabels(),rotation=90, horizontalalignment='right')
     plt.tight_layout()
     plt.tight_layout()
     fig.savefig("ingredient_graph.png")
-    
 
     ax2.bar(xlist_recipe, ylist_recipe, color = 'green')
     ax2.set(xlabel='Recipe', ylabel='Average Nutritional Score', title='Average Nutritional Score by Recipe')
-    ax2.set_yticks(ax2.get_yticks())
+    #ax2.set_yticks(ax2.get_yticks())
     plt.xticks(rotation = 90)
     plt.tight_layout()
     plt.tight_layout()
@@ -241,14 +241,14 @@ def barchart(ingredient_score_dict, recipe_score_dict):
 
 def main():
     cur, conn = setUpDatabase('foodquest.db')
-    ingredient_string = grab_wordcloud_data(cur, conn)
-    word_cloud(ingredient_string)
+    #ingredient_string = grab_wordcloud_data(cur, conn)
+    #word_cloud(ingredient_string)
     #country_list = grab_pie_data(cur, conn)
     #country_list2 = pie_graph(country_list)
     #coord_list = grab_staticmap_data(cur, conn, country_list2)
     #staticmap(coord_list)
-    #ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
-    #barchart(ingredient_score_dict, recipe_score_dict)
+    ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
+    barchart(ingredient_score_dict, recipe_score_dict)
 
 if __name__ == "__main__":
     main()
