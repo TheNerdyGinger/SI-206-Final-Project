@@ -2,8 +2,6 @@ import json
 import requests
 import sqlite3
 
-
-
 def get_data(ingredients, recipe):
     url = 'http://www.recipepuppy.com/api/?i={}&q={}&p=3'
     request_url = url.format(ingredients, recipe)
