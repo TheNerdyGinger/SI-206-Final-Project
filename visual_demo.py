@@ -271,23 +271,24 @@ def plot_pie_chart():
     labels = [d[0] for d in ditems]
     values = [d[1] for d in ditems]
     patches, text = plt.pie(values, labels=values)
-    plt.legend(patches, names, loc='best', bbox_to_anchor = (0.2, 0.8), title='Number of Ingredients')
+    plt.legend(patches, names, loc='best', bbox_to_anchor = (0.2, 0.8), title='Recipes')
     plt.axis('equal')
+    plt.title('Number of Ingredients per Recipe', bbox = {'pad': 5}, y=1.05)
     plt.show()
     
   
    
 
 def main():
-    # cur, conn = setUpDatabase('foodquest.db')
-    # ingredient_string = grab_wordcloud_data(cur, conn)
-    # word_cloud(ingredient_string)
-    # country_list = grab_pie_data(cur, conn)
-    # country_list2 = pie_graph(country_list)
-    # coord_list = grab_staticmap_data(cur, conn, country_list2)
-    # staticmap(coord_list)
-    # ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
-    # barchart(ingredient_score_dict, recipe_score_dict)
+    cur, conn = setUpDatabase('foodquest.db')
+    ingredient_string = grab_wordcloud_data(cur, conn)
+    word_cloud(ingredient_string)
+    country_list = grab_pie_data(cur, conn)
+    country_list2 = pie_graph(country_list)
+    coord_list = grab_staticmap_data(cur, conn, country_list2)
+    staticmap(coord_list)
+    ingredient_score_dict, recipe_score_dict = grab_barchart_data(cur, conn)
+    barchart(ingredient_score_dict, recipe_score_dict)
     bar = plot_bar_graph()
     pie = plot_pie_chart()
 
